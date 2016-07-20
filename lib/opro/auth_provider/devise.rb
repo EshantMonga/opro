@@ -8,7 +8,7 @@ module Opro
       end
 
       def login_method(current_user)
-        controller.sign_in(current_user, :bypass => true)
+        controller.sign_in(current_user)
       end
 
       def logout_method(current_user)
