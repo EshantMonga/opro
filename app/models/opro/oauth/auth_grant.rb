@@ -38,6 +38,7 @@ class Opro::Oauth::AuthGrant < ActiveRecord::Base
   end
 
   def self.find_for_token(token)
+    return nil if token.blank?
     auth_grant_id = Base64.decode64(token).split("|").first.to_i
     auth_grant = self.where(id: auth_grant_id).includes(:user, :client_application).first
     auth_grant.nil? ? nil : (auth_grant.access_token == token ? auth_grant : nil)
