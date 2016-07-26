@@ -86,6 +86,7 @@ module Opro
       end
 
       def oauth_client_app
+        return false      if !@use_oauth
         return false      if oauth_access_grant.blank?
         @oauth_client_app ||= oauth_access_grant.client_application
       end
