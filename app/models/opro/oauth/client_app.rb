@@ -19,7 +19,8 @@ class Opro::Oauth::ClientApp < ActiveRecord::Base
   end
 
   def self.authenticate(app_id, app_secret)
-    where(["app_id = ? AND app_secret = ?", app_id, app_secret]).first
+    app = where(app_id: app_id).first
+    app.nil? ? nil : (app.app_secret == app_secret ? app : nil)
   end
 
   def self.create_with_user_and_name(user, name)
@@ -36,5 +37,13 @@ class Opro::Oauth::ClientApp < ActiveRecord::Base
     client_app = where(:app_id => app_id)
     return app_id if client_app.blank?
     generate_unique_app_id
+  end
+
+  def app_secret=(app_secret)
+    write_attribute(:app_secret, ::Opro.encrypt_lambda.call(app_secret))
+  end
+
+  def app_secret
+    ::Opro.decrypt_lambda.call(read_attribute(:app_secret))
   end
 end

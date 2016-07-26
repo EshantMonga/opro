@@ -12,8 +12,6 @@ class Opro::Oauth::AuthGrant < ActiveRecord::Base
   validates :code,           :uniqueness => true
   validates :access_token,   :uniqueness => true
 
-  before_create :refresh
-
   alias_attribute :token, :access_token
 
   serialize :permissions, Hash
@@ -40,7 +38,9 @@ class Opro::Oauth::AuthGrant < ActiveRecord::Base
   end
 
   def self.find_for_token(token)
-    self.where(:access_token => token).includes(:user, :client_application).first
+    auth_grant_id = Base64.decode64(token).split("|").first.to_i
+    auth_grant = self.where(id: auth_grant_id).includes(:user, :client_application).first
+    auth_grant.nil? ? nil : (auth_grant.access_token == token ? auth_grant : nil)
   end
 
   def self.find_user_for_token(token)
@@ -48,8 +48,10 @@ class Opro::Oauth::AuthGrant < ActiveRecord::Base
   end
 
   def self.find_by_code_app(code, app)
+    auth_grant_id = Base64.decode64(code).split("|").first.to_i
     app_id = app.is_a?(Integer) ? app : app.id
-    auth_grant = self.where("code = ? AND application_id = ?", code, app_id).first
+    auth_grant = self.where(id: auth_grant_id, application_id: app_id).first
+    auth_grant.nil? ? nil : (auth_grant.code == code ? auth_grant : nil)
   end
 
   # turns array of permissions into a hash
@@ -66,6 +68,7 @@ class Opro::Oauth::AuthGrant < ActiveRecord::Base
       auth_grant.user_id        = user.id
       auth_grant.application_id = app_id
       auth_grant.save
+      auth_grant.refresh!
       auth_grant
     end
   end
@@ -75,7 +78,9 @@ class Opro::Oauth::AuthGrant < ActiveRecord::Base
   end
 
   def self.find_by_refresh_app(refresh_token, application_id)
-    self.where("refresh_token = ? AND application_id = ?", refresh_token, application_id).first
+    auth_grant_id = Base64.decode64(refresh_token).split("|").first.to_i
+    auth_grant = self.where(id: auth_grant_id, application_id: application_id).first
+    auth_grant.nil? ? nil : (auth_grant.refresh_token == refresh_token ? auth_grant : nil)
   end
 
   # generates tokens, expires_at and saves
@@ -92,11 +97,9 @@ class Opro::Oauth::AuthGrant < ActiveRecord::Base
   end
 
   # used to guarantee that we are generating unique codes, access_tokens and refresh_tokens
-  def unique_token_for(field, secure_token  = SecureRandom.hex(16))
+  def unique_token_for(field, secure_token  = SecureRandom.hex(24))
     raise "bad field" unless self.respond_to?(field)
-    auth_grant = self.class.where(field => secure_token).first
-    return secure_token if auth_grant.blank?
-    unique_token_for(field)
+    secure_token
   end
 
   def redirect_uri_for(redirect_uri, state = nil)
@@ -107,6 +110,30 @@ class Opro::Oauth::AuthGrant < ActiveRecord::Base
     end
     redirect_uri << "&state=#{state}" if state.present?
     redirect_uri
+  end
+
+  def code=(code)
+    write_attribute(:code, ::Opro.encrypt_lambda.call(code))
+  end
+
+  def code
+    ::Opro.decrypt_lambda.call(read_attribute(:code))
+  end
+
+  def access_token=(access_token)
+    write_attribute(:access_token, ::Opro.encrypt_lambda.call(access_token))
+  end
+
+  def access_token
+    ::Opro.decrypt_lambda.call(read_attribute(:access_token))
+  end
+
+  def refresh_token=(refresh_token)
+    write_attribute(:refresh_token, ::Opro.encrypt_lambda.call(refresh_token))
+  end
+
+  def refresh_token
+    ::Opro.decrypt_lambda.call(read_attribute(:refresh_token))
   end
 
   private
@@ -122,8 +149,12 @@ class Opro::Oauth::AuthGrant < ActiveRecord::Base
 
   # use refresh instead
   def generate_tokens!
-    self.code          = unique_token_for(:code)
-    self.access_token  = unique_token_for(:access_token)
-    self.refresh_token = unique_token_for(:refresh_token)
+    self.code          = include_id(unique_token_for(:code))
+    self.access_token  = include_id(unique_token_for(:access_token))
+    self.refresh_token = include_id(unique_token_for(:refresh_token))
+  end
+
+  def include_id(token)
+    Base64.encode64("#{self.id}|#{token}").strip
   end
 end

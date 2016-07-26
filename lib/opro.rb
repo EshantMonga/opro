@@ -59,6 +59,21 @@ module Opro
     @auth_strategy = auth_strategy
   end
 
+  def self.encrypt_lambda
+    @encrypt_lambda
+  end
+
+  def self.encrypt_lambda=(encrypt_lambda)
+    @encrypt_lambda = encrypt_lambda
+  end
+
+  def self.decrypt_lambda
+    @decrypt_lambda
+  end
+
+  def self.decrypt_lambda=(decrypt_lambda)
+    @decrypt_lambda = decrypt_lambda
+  end
 
   def self.login_method(&block)
     if block.present?
