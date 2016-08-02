@@ -36,12 +36,7 @@ class Opro::Oauth::TokenController < OproController
   end
 
   def debug_msg(options, app)
-    msg = "Could not find a user that belongs to this application"
-    msg << " based on client_id=#{options[:client_id]} and client_secret=#{options[:client_secret]}" if app.blank?
-    msg << " & has a refresh_token=#{options[:refresh_token]}" if options[:refresh_token]
-    msg << " & has been granted a code=#{options[:code]}"      if options[:code]
-    msg << " using username and password"                      if options[:password]
-    msg
+    "Could not find a user that belongs to this application"
   end
 
   def render_error(msg)
