@@ -9,8 +9,6 @@ class Opro::Oauth::AuthGrant < ActiveRecord::Base
 
 
   validates :application_id, :uniqueness => {:scope => :user_id, :message => "Application is already authorized for this user"}, :presence => true
-  validates :code,           :uniqueness => true
-  validates :access_token,   :uniqueness => true
 
   alias_attribute :token, :access_token
 
@@ -156,6 +154,6 @@ class Opro::Oauth::AuthGrant < ActiveRecord::Base
   end
 
   def include_id(token)
-    Base64.encode64("#{self.id}|#{token}").strip
+    Base64.strict_encode64("#{self.id}|#{token}")
   end
 end
