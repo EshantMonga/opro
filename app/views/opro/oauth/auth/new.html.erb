@@ -5,7 +5,7 @@
     <%= @client_app.name %>  would like to access your data. Only accept if you trust this application. You will then be redirected back to: "<%= @redirect_uri %>".
   </p>
 
-  <%= form_for @client_app, :url => oauth_authorize_path(:client_id => @client_app.client_id, :redirect_uri => @redirect_uri), :method => :post do |f| %>
+  <%= form_for @client_app, :url => oauth_authorize_path(@authorize_path_args), :method => :post do |f| %>
 
     I Authorize <%= @client_app.name %> to:
 

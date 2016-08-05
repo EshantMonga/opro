@@ -6,6 +6,11 @@ class Opro::Oauth::AuthController < OproController
     @redirect_uri = params[:redirect_uri]
     @client_app   = Opro::Oauth::ClientApp.find_by_app_id(params[:client_id])
     @scopes       = scope_from_params(params)
+    @authorize_path_args = {
+        client_id: @client_app.client_id,
+        redirect_uri: @redirect_uri
+    }
+    @authorize_path_args[:state] = params[:state] if params[:state].present?
   end
 
   # :ask_user! is called before creating a new authorization, this allows us to redirect
