@@ -93,26 +93,7 @@ module Opro
 
       def oauth_user
         return false if oauth_access_grant.blank?
-        if @oauth_user.nil?
-          access_grant_user = oauth_access_grant.user
-          if params[:login]
-            # for current org, auth is granted on org-wide basis and individual
-            # users identified through login parameter.
-            # TODO: also check for access_grant_user's orgid, if ever
-            #   used for any other org.
-            user = User.find_or_create_temp_by_email(
-              email: params[:login],
-              organization_id: access_grant_user.organization_id)
-            if user.organization_id != access_grant_user.organization_id
-              @oauth_user = nil
-            else
-              @oauth_user = user
-            end
-          else
-            @oauth_user = access_grant_user
-          end
-        end
-        @oauth_user
+        @oauth_user ||= ::Opro.user_creation_lambda.call(params, oauth_access_grant.user)
       end
 
       def oauth_auth!

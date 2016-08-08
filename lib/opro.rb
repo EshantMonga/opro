@@ -75,6 +75,14 @@ module Opro
     @decrypt_lambda = decrypt_lambda
   end
 
+  def self.user_creation_lambda
+      @user_creation_lambda
+  end
+
+  def self.user_creation_lambda=(user_creation_lambda)
+      @user_creation_lambda = user_creation_lambda
+  end
+
   def self.login_method(&block)
     if block.present?
       @login_method = block
