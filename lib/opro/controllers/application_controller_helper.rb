@@ -10,8 +10,8 @@ module Opro
       include Opro::Controllers::Concerns::RateLimits
 
       included do
-        around_filter      :oauth_auth!
-        skip_before_filter :verify_authenticity_token, :if => :valid_oauth?, raise: false
+        around_action      :oauth_auth!
+        skip_before_action :verify_authenticity_token, :if => :valid_oauth?, raise: false
       end
 
       def opro_authenticate_user!
