@@ -2,9 +2,9 @@
 # codes and refresh_tokens for access_tokens
 
 class Opro::Oauth::TokenController < OproController
-  before_filter :opro_authenticate_user!, except: [:create]
-  skip_before_filter :verify_authenticity_token, only: [:create]
-  skip_before_filter :authenticate_user!, only: [:create]
+  before_action :opro_authenticate_user!, except: [:create]
+  skip_before_action :verify_authenticity_token, only: [:create]
+  skip_before_action :authenticate_user!, only: [:create]
 
   def create
     # Find the client application
